@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: upgrader-value
+  name: kiwi_value_assistant
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: upgrader-value
+      app: kiwi_value_assistant
   template:
     metadata:
       labels:
-        app: upgrader-value
+        app: kiwi_value_assistant
     spec:
       containers:
-        - name: upgrader-value-container
-          image: ghcr.io/camunda-community-hub/value-upgrader:latest
+        - name: kiwi_value_assistant.-container
+          image: ghcr.io/camunda-community-hub/kiwi-value-assistant:latest
           ports:
             - containerPort: 8383
 
@@ -22,10 +22,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: upgrader-value-service
+  name: kiwi_value_assistant.-service
 spec:
   selector:
-    app: upgrader-value
+    app: kiwi_value_assistant
   ports:
     - protocol: TCP
       port: 8383

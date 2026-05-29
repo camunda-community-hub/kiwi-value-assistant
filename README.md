@@ -35,3 +35,10 @@ Check the status and warnings displayed in the report.
 The rules applied during the migration are visible in the **UpgraderRules** tab.
 
 ![RuleTab.png](doc/RuleTab.png)
+
+## Reviewer
+
+Uppload your value.yaml, select the correct Helm version, and let the reviewer do its jobs
+
+
+![ReviewerTab.png](doc/ReviewerTab.png)

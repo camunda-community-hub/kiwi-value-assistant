@@ -73,12 +73,12 @@ class KiwiValueAssistant extends React.Component {
                                 active={this.state.frameContent === FRAME_NAME.REVIEWSINGLEVALUE}
                                 onClick={() => {
                                     this.clickMenu(FRAME_NAME.REVIEWSINGLEVALUE)
-                                }}>Review Single value</Nav.Link>
+                                }}>Reviewer</Nav.Link>
                             <Nav.Link
                                 active={this.state.frameContent === FRAME_NAME.REVIEWRULES}
                                 onClick={() => {
                                     this.clickMenu(FRAME_NAME.REVIEWRULES)
-                                }}>Review Rules</Nav.Link>
+                                }}>Reviewer Rules</Nav.Link>
                         </Nav>
                     </Container>
                 </Navbar>

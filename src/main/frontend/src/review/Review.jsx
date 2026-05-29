@@ -21,8 +21,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-    Tag,
-    TextInput
+    Tag
 } from "carbon-components-react";
 
 import RestCallService from "../services/RestCallService";
@@ -54,8 +53,7 @@ class Review extends React.Component {
             },
             helmVersions: [],
             result: "",
-            rules: [],
-            isOpen: false
+            openGroups: {}
         };
     }
 
@@ -67,11 +65,20 @@ class Review extends React.Component {
         const groups = this.state.result?.rulesEvaluation ?? [];
         const executionInformations = this.state.result?.executionInformations ?? [];
 
+        const countLevel = (level) => groups.reduce((sum, g) =>
+            sum +
+            (g.results?.filter(r => !r.followed && r.level === level).length ?? 0) +
+            (g.informations?.filter(i => i.level === level).length ?? 0), 0);
+        const errorCount         = countLevel("ERROR");
+        const warningCount       = countLevel("WARNING");
+        const clarificationCount = countLevel("CLARIFICATION");
+        const infoCount          = countLevel("INFO");
+
         return (
             <div className={"container"}>
                 <div className="row">
                     <div className="col-md-12">
-                        <h1 className="title">Review Single Value</h1>
+                        <h1 className="title">Reviewer</h1>
                     </div>
                     <div className="row" style={{width: "100%"}}>
                         <div className="col-md-12">
@@ -113,14 +120,9 @@ class Review extends React.Component {
                     </div>
 
                     <div className="col-md-6">
-                        <TextInput
-                            labelText="Helm version"
-                            value={this.state.display.version}
-                            onChange={(event) => this.setVersion(event.target.value)}>
-                        </TextInput>
                         <Select
                             id="template-select"
-                            labelText="Template"
+                            labelText="Helm version"
                             value={this.state.display.version}
                             onChange={(event) => this.setVersion(event.target.value)}
                         >
@@ -144,152 +146,203 @@ class Review extends React.Component {
                     <div className="col-md-12">
                         <h2>Result</h2>
 
-                        {/* Execution informations — displayed before the rule groups */}
-                        {executionInformations.length > 0 && (
-                            <div style={{marginBottom: 16}}>
-                                <h5 style={{marginBottom: 8}}>
-                                    Analysis execution
-                                    <Tag type={executionInformations.some(i => i.level === "WARNING" || i.level === "ERROR") ? "red" : "gray"}
-                                         size="sm" style={{marginLeft: 8}}>
-                                        {executionInformations.length}
-                                    </Tag>
-                                </h5>
-                                <Table size="sm" useZebraStyles style={{width: "100%"}}>
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableHeader style={{width: "10%"}}>Level</TableHeader>
-                                            <TableHeader>Message</TableHeader>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {executionInformations.map((info, i) => (
-                                            <TableRow key={i}>
-                                                <TableCell>
-                                                    <Tag type={LEVEL_TAG[info.level] ?? "gray"} size="sm">
-                                                        <span style={{fontSize: "0.75em", textTransform: "lowercase", whiteSpace: "nowrap"}}>
-                                                            {LEVEL_ICON[info.level]} {info.level}
-                                                        </span>
-                                                    </Tag>
-                                                </TableCell>
-                                                <TableCell>{info.message}</TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </div>
-                        )}
-
-                        {groups.length > 0 && (
+                        {(executionInformations.length > 0 || groups.length > 0) && (
                             <Accordion>
-                                {groups.map((group) => {
-                                    const count = (group.results?.length ?? 0) + (group.informations?.length ?? 0);
-                                    const hasError =
-                                        group.results?.some(r => !r.followed && (r.level === "WARNING" || r.level === "ERROR")) ||
-                                        group.informations?.some(i => i.level === "WARNING" || i.level === "ERROR");
-                                    return (
-                                    <AccordionItem
-                                        key={group.id}
-                                        title={
-                                            <span style={{display: "flex", alignItems: "center", gap: 8}}>
-                                                <strong>{group.name}</strong>
-                                                <Tag type={hasError ? "red" : "gray"} size="sm">
-                                                    {count}
-                                                </Tag>
-                                            </span>
-                                        }
-                                        subtitle={group.description}
-                                    >
-                                        {/* UpgraderRules table */}
-                                        {group.results && group.results.length > 0 && (
-                                            <Table size="sm" useZebraStyles style={{width: "100%"}}>
-                                                <TableHead>
-                                                    <TableRow>
-                                                        <TableHeader style={{width: "8%"}}>Level</TableHeader>
-                                                        <TableHeader style={{width: "8%"}}>Status</TableHeader>
-                                                        <TableHeader style={{width: "30%"}}>Comment</TableHeader>
-                                                        <TableHeader style={{width: "46%"}}>Value</TableHeader>
-                                                        <TableHeader style={{width: "8%"}}>Links</TableHeader>
+
+                                {/* ── Section 1 : Execution ───────────────────────── */}
+                                <AccordionItem
+                                    title={
+                                        <span style={{display: "flex", alignItems: "center", gap: 8}}>
+                                            <strong>Execution</strong>
+                                            <Tag type={executionInformations.some(i => i.level === "WARNING" || i.level === "ERROR") ? "red" : "gray"}
+                                                 size="sm">
+                                                {executionInformations.length}
+                                            </Tag>
+                                        </span>
+                                    }
+                                    subtitle="Analysis execution details"
+                                >
+                                    {executionInformations.length > 0 ? (
+                                        <Table size="sm" useZebraStyles style={{width: "100%"}}>
+                                            <TableHead>
+                                                <TableRow>
+                                                    <TableHeader style={{width: "10%"}}>Level</TableHeader>
+                                                    <TableHeader>Message</TableHeader>
+                                                </TableRow>
+                                            </TableHead>
+                                            <TableBody>
+                                                {executionInformations.map((info, i) => (
+                                                    <TableRow key={i}>
+                                                        <TableCell>
+                                                            <Tag type={LEVEL_TAG[info.level] ?? "gray"} size="sm">
+                                                                <span style={{fontSize: "0.75em", textTransform: "lowercase", whiteSpace: "nowrap"}}>
+                                                                    {LEVEL_ICON[info.level]} {info.level}
+                                                                </span>
+                                                            </Tag>
+                                                        </TableCell>
+                                                        <TableCell>{info.message}</TableCell>
                                                     </TableRow>
-                                                </TableHead>
-                                                <TableBody>
-                                                    {group.results.map((rule) => (
-                                                        <TableRow key={rule.ruleName}>
-                                                            <TableCell>
-                                                                <Tag type={LEVEL_TAG[rule.level] ?? "gray"}>
-                                                                    <span style={{fontSize: "0.75em", textTransform: "lowercase", whiteSpace: "nowrap"}}>
-                                                                        {LEVEL_ICON[rule.level]} {rule.level}
-                                                                    </span>
-                                                                </Tag>
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                <Tag type={rule.followed ? "green" : "red"} size="sm">
-                                                                    <span style={{fontSize: "0.75em", textTransform: "lowercase", whiteSpace: "nowrap"}}>
-                                                                        {rule.followed ? "✔ OK" : "✘ Missing"}
-                                                                    </span>
-                                                                </Tag>
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                <div>{rule.comment}</div>
-                                                                {rule.description && (
-                                                                    <div style={{fontSize: "0.85em", color: "#6f6f6f", marginTop: 4}}>
-                                                                        {rule.description}
-                                                                    </div>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    ) : (
+                                        <p style={{color: "#6f6f6f", margin: "8px 0"}}>No execution information.</p>
+                                    )}
+                                </AccordionItem>
+
+                                {/* ── Section 2 : Analysis ────────────────────────── */}
+                                <AccordionItem
+                                    title={
+                                        <span style={{display: "flex", alignItems: "center", gap: 8}}>
+                                            <strong>Analysis</strong>
+                                            <Tag type={groups.some(g =>
+                                                    g.results?.some(r => !r.followed && (r.level === "WARNING" || r.level === "ERROR")) ||
+                                                    g.informations?.some(i => i.level === "WARNING" || i.level === "ERROR")
+                                                ) ? "red" : "gray"}
+                                                 size="sm">
+                                                {errorCount + warningCount + clarificationCount + infoCount}
+                                            </Tag>
+                                        </span>
+                                    }
+                                    subtitle="Rule evaluation results"
+                                >
+                                    <span style={{fontWeight: "bold", fontSize: "0.8em", margin: "5px 5px 5px 5px", display: "block"}}>
+                                        {errorCount} error{errorCount !== 1 ? "s" : ""}, {warningCount} warning{warningCount !== 1 ? "s" : ""}, {clarificationCount} clarification{clarificationCount !== 1 ? "s" : ""}, {infoCount} info
+                                    </span>
+
+                                    {groups.length > 0 ? (
+                                        <div style={{borderTop: "1px solid #e0e0e0"}}>
+                                            {groups.map((group) => {
+                                                const isOpen = this.state.openGroups[group.id] ?? false;
+                                                const count  = (group.results?.length ?? 0) + (group.informations?.length ?? 0);
+                                                const hasError =
+                                                    group.results?.some(r => !r.followed && (r.level === "WARNING" || r.level === "ERROR")) ||
+                                                    group.informations?.some(i => i.level === "WARNING" || i.level === "ERROR");
+                                                return (
+                                                    <div key={group.id} style={{borderBottom: "1px solid #e0e0e0"}}>
+
+                                                        {/* ── Clickable header ── */}
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); this.toggleGroup(group.id); }}
+                                                            style={{
+                                                                width: "100%", textAlign: "left", background: "none",
+                                                                border: "none", cursor: "pointer", padding: "12px 16px",
+                                                                display: "flex", alignItems: "center", gap: 8
+                                                            }}
+                                                        >
+                                                            <span style={{fontSize: "0.75em", marginRight: 4}}>{isOpen ? "▼" : "▶"}</span>
+                                                            <strong>{group.name}</strong>
+                                                            <Tag type={hasError ? "red" : "gray"} size="sm">{count}</Tag>
+                                                            {group.description && (
+                                                                <span style={{fontSize: "0.8em", color: "#6f6f6f", fontWeight: "normal"}}>
+                                                                    — {group.description}
+                                                                </span>
+                                                            )}
+                                                        </button>
+
+                                                        {/* ── Collapsible content ── */}
+                                                        {isOpen && (
+                                                            <div style={{padding: "0 16px 16px"}}>
+
+                                                                {/* Results table */}
+                                                                {group.results && group.results.length > 0 && (
+                                                                    <Table size="sm" useZebraStyles style={{width: "100%"}}>
+                                                                        <TableHead>
+                                                                            <TableRow>
+                                                                                <TableHeader style={{width: "8%"}}>Level</TableHeader>
+                                                                                <TableHeader style={{width: "8%"}}>Status</TableHeader>
+                                                                                <TableHeader style={{width: "30%"}}>Comment</TableHeader>
+                                                                                <TableHeader style={{width: "46%"}}>Value</TableHeader>
+                                                                                <TableHeader style={{width: "8%"}}>Links</TableHeader>
+                                                                            </TableRow>
+                                                                        </TableHead>
+                                                                        <TableBody>
+                                                                            {group.results.map((rule) => (
+                                                                                <TableRow key={rule.ruleName}>
+                                                                                    <TableCell>
+                                                                                        <Tag type={LEVEL_TAG[rule.level] ?? "gray"}>
+                                                                                            <span style={{fontSize: "0.75em", textTransform: "lowercase", whiteSpace: "nowrap"}}>
+                                                                                                {LEVEL_ICON[rule.level]} {rule.level}
+                                                                                            </span>
+                                                                                        </Tag>
+                                                                                    </TableCell>
+                                                                                    <TableCell>
+                                                                                        <Tag type={rule.followed ? "green" : "red"} size="sm">
+                                                                                            <span style={{fontSize: "0.75em", textTransform: "lowercase", whiteSpace: "nowrap"}}>
+                                                                                                {rule.followed ? "✔ OK" : "✘ Missing"}
+                                                                                            </span>
+                                                                                        </Tag>
+                                                                                    </TableCell>
+                                                                                    <TableCell>
+                                                                                        <div>{rule.comment}</div>
+                                                                                        {rule.description && (
+                                                                                            <div style={{fontSize: "0.85em", color: "#6f6f6f", marginTop: 4}}>
+                                                                                                {rule.description}
+                                                                                            </div>
+                                                                                        )}
+                                                                                    </TableCell>
+                                                                                    <TableCell>
+                                                                                        <pre style={{fontSize: 11, margin: 0}}>
+                                                                                            {rule.details?.expectedValue ?? rule.details?.unexpectedValue ?? "—"}
+                                                                                        </pre>
+                                                                                    </TableCell>
+                                                                                    <TableCell style={{whiteSpace: "nowrap"}}>
+                                                                                        {rule.links && rule.links.map((link, i) => (
+                                                                                            <a key={i} href={link} target="_blank"
+                                                                                               rel="noopener noreferrer"
+                                                                                               style={{display: "block", fontSize: "0.8em"}}>
+                                                                                                [{i + 1}]
+                                                                                            </a>
+                                                                                        ))}
+                                                                                    </TableCell>
+                                                                                </TableRow>
+                                                                            ))}
+                                                                        </TableBody>
+                                                                    </Table>
                                                                 )}
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                <pre style={{fontSize: 11, margin: 0}}>
-                                                                    {rule.details?.expectedValue ?? rule.details?.unexpectedValue ?? "—"}
-                                                                </pre>
-                                                            </TableCell>
-                                                            <TableCell style={{whiteSpace: "nowrap"}}>
-                                                                {rule.links && rule.links.map((link, i) => (
-                                                                    <a key={i} href={link} target="_blank"
-                                                                       rel="noopener noreferrer"
-                                                                       style={{display: "block", fontSize: "0.8em"}}>
-                                                                        [{i + 1}]
-                                                                    </a>
-                                                                ))}
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
-                                        )}
 
-                                        {/* informations table — e.g. Execution group: { level, message } items */}
-                                        {group.informations && group.informations.length > 0 && (
-                                            <Table size="sm" useZebraStyles style={{width: "100%"}}>
-                                                <TableHead>
-                                                    <TableRow>
-                                                        <TableHeader style={{width: "10%"}}>Level</TableHeader>
-                                                        <TableHeader>Message</TableHeader>
-                                                    </TableRow>
-                                                </TableHead>
-                                                <TableBody>
-                                                    {group.informations.map((info, i) => (
-                                                        <TableRow key={i}>
-                                                            <TableCell>
-                                                                <Tag type={LEVEL_TAG[info.level] ?? "gray"} size="sm">
-                                                                    <span style={{fontSize: "0.75em", textTransform: "lowercase", whiteSpace: "nowrap"}}>
-                                                                        {LEVEL_ICON[info.level]} {info.level}
-                                                                    </span>
-                                                                </Tag>
-                                                            </TableCell>
-                                                            <TableCell>{info.message}</TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
-                                        )}
+                                                                {/* Informations table */}
+                                                                {group.informations && group.informations.length > 0 && (
+                                                                    <Table size="sm" useZebraStyles style={{width: "100%"}}>
+                                                                        <TableHead>
+                                                                            <TableRow>
+                                                                                <TableHeader style={{width: "10%"}}>Level</TableHeader>
+                                                                                <TableHeader>Message</TableHeader>
+                                                                            </TableRow>
+                                                                        </TableHead>
+                                                                        <TableBody>
+                                                                            {group.informations.map((info, i) => (
+                                                                                <TableRow key={i}>
+                                                                                    <TableCell>
+                                                                                        <Tag type={LEVEL_TAG[info.level] ?? "gray"} size="sm">
+                                                                                            <span style={{fontSize: "0.75em", textTransform: "lowercase", whiteSpace: "nowrap"}}>
+                                                                                                {LEVEL_ICON[info.level]} {info.level}
+                                                                                            </span>
+                                                                                        </Tag>
+                                                                                    </TableCell>
+                                                                                    <TableCell>{info.message}</TableCell>
+                                                                                </TableRow>
+                                                                            ))}
+                                                                        </TableBody>
+                                                                    </Table>
+                                                                )}
 
-                                        {/* Empty state */}
-                                        {(!group.results || group.results.length === 0) &&
-                                         (!group.informations || group.informations.length === 0) && (
-                                            <p style={{color: "#6f6f6f", margin: "8px 0"}}>No findings.</p>
-                                        )}
-                                    </AccordionItem>
-                                    );
-                                })}
+                                                                {/* Empty state */}
+                                                                {(!group.results || group.results.length === 0) &&
+                                                                 (!group.informations || group.informations.length === 0) && (
+                                                                    <p style={{color: "#6f6f6f", margin: "8px 0"}}>No findings.</p>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <p style={{color: "#6f6f6f", margin: "8px 0"}}>No analysis results.</p>
+                                    )}
+                                </AccordionItem>
+
                             </Accordion>
                         )}
                     </div>
@@ -297,6 +350,15 @@ class Review extends React.Component {
 
             </div>
         );
+    }
+
+    toggleGroup(groupId) {
+        this.setState(prev => ({
+            openGroups: {
+                ...prev.openGroups,
+                [groupId]: !(prev.openGroups[groupId] ?? false)
+            }
+        }));
     }
 
     setVersion(value) {
