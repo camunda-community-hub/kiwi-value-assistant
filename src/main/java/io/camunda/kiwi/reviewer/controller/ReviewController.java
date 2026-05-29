@@ -1,10 +1,10 @@
 package io.camunda.kiwi.reviewer.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import io.camunda.kiwi.reviewer.ReviewService;
-import io.camunda.kiwi.reviewer.model.AnalysisResponse;
+import io.camunda.kiwi.reviewer.review.CollectorInformation;
+import io.camunda.kiwi.reviewer.review.ReviewReponse;
+import io.camunda.kiwi.reviewer.review.ReviewService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/review/api/v1")
+@RequestMapping("/reviewer/api/v1")
 public class ReviewController {
 
     private static final Logger logger = LoggerFactory.getLogger(ReviewController.class);
@@ -45,28 +45,25 @@ public class ReviewController {
             value = "/analysis",
             consumes = {MediaType.MULTIPART_FORM_DATA_VALUE},
             produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<AnalysisResponse> reviewValues(
-            @RequestParam(name = "version", required = true) String version,
+    public ResponseEntity<ReviewReponse> reviewValues(
+            @RequestParam(name = "version", required = true) String helmVersion,
             @RequestPart("File") List<MultipartFile> uploadedfiles,
 
             @RequestHeader(HttpHeaders.ACCEPT) String accept) {
 
         String valuesToAnalyse = loadFileToString(uploadedfiles.get(0));
 
-        logger.info("analysing version[{}]", version);
+        logger.info("analysing HelmVersion[{}]", helmVersion);
         try {
             Map<String, Object> valuesMap =
                     yamlMapper.readValue(valuesToAnalyse, new TypeReference<>() {
                     });
-            AnalysisResponse response = new AnalysisResponse();
-            response.rulesEvaluation = reviewService.reviewValues(version, valuesMap);
+            ReviewReponse response = reviewService.reviewValues(helmVersion, valuesMap);
             return ResponseEntity.ok(response);
-
         } catch (Exception e) {
-            logger.error("reviewValues version [{}] :", version, e);
+            logger.error("reviewValues version [{}] :", helmVersion, e);
             return ResponseEntity.badRequest().build();
         }
-
     }
 
     @PostMapping(
@@ -80,7 +77,9 @@ public class ReviewController {
         logger.debug(
                 "Getting non-default values for version ={} with provided values={}", version, values);
 
-        return ResponseEntity.ok(reviewService.getNonDefaultValues(values, version));
+        // TODO: give a method to pass the collectorInformation to the result
+        CollectorInformation collectorInformation = new CollectorInformation();
+        return ResponseEntity.ok(reviewService.getNonDefaultValues(version, values, collectorInformation));
     }
 
     @PostMapping(

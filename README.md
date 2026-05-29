@@ -30,8 +30,8 @@ The migrated `values.yaml` file will be generated automatically.
 
 Check the status and warnings displayed in the report.
 
-## Rules
+## UpgraderRules
 
-The rules applied during the migration are visible in the **Rules** tab.
+The rules applied during the migration are visible in the **UpgraderRules** tab.
 
 ![RuleTab.png](doc/RuleTab.png)

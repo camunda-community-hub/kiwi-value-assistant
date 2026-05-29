@@ -275,7 +275,7 @@ class Upgrader extends React.Component {
     convert(event) {
         console.log("Convert loadYaml " + this.state.files + " version [" + this.state.display.version);
         this.refreshStatusOnPage();
-        let url = '/upgraded/api/v1/migratefile?version=' + this.state.display.version;
+        let url = '/upgrader/api/v1/migratefile?version=' + this.state.display.version;
         console.log("URL: " + url);
 
         let restCallService = RestCallService.getInstance();

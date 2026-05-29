@@ -1,7 +1,6 @@
 package io.camunda.kiwi.reviewer.helm;
 
 import com.marcnuri.helm.Helm;
-import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -16,48 +15,16 @@ public class HelmRepoFactory {
     private static final Logger logger = LoggerFactory.getLogger(HelmRepoFactory.class);
 
     HelmConfig helmConfig;
-
-    public static class HelmRepo {
-        public HelmRepoProperties helmRepoProperties;
-        public boolean isReady;
-
-        public HelmRepo(HelmRepoProperties helmRepoProperties, boolean isReady) {
-            this.helmRepoProperties = helmRepoProperties;
-            this.isReady = isReady;
-        }
-
-        public String getRepoName() {
-            return helmRepoProperties.repoName();
-        }
-
-        public URI getUrl() {
-            return helmRepoProperties.url();
-        }
-    }
+    private final Map<String, HelmRepo> cacheHelmRepos = new HashMap<>();
 
 
-    private Map<String, HelmRepo> cacheHelmRepos = new HashMap<>();
-
-    public HelmRepoFactory(HelmConfig helmConfig) {
+    public HelmRepoFactory() {
         this.helmConfig = helmConfig;
     }
-
-    @PostConstruct
-    public void init() {
-        logger.info("Initializing Factory from helmRepoProperties[{}]", helmConfig.getRepos());
-        if (helmConfig.getRepos() != null) {
-            helmConfig.getRepos().forEach(helmRepo -> {
-                if (!cacheHelmRepos.containsKey(helmRepo.repoName()))
-                    addRepo(helmRepo);
-            });
-        }
-    }
-
 
     public void addRepo(HelmRepoProperties helmRepoProperties) {
         cacheHelmRepos.put(helmRepoProperties.repoName(), new HelmRepo(helmRepoProperties, false));
     }
-
 
     public HelmRepo findHelmRepoByName(String repoName, boolean updateRepository) {
         HelmRepo helmRepo = cacheHelmRepos.get(repoName);
@@ -66,7 +33,6 @@ public class HelmRepoFactory {
         }
         return helmRepo;
     }
-
 
     public HelmRepo findHelmRepoByUrl(String repoUrl, boolean updateRepository) {
         Optional<HelmRepo> helmRepoFind = cacheHelmRepos.values().stream()
@@ -81,7 +47,6 @@ public class HelmRepoFactory {
         }
         return helmRepoFind.isPresent() ? helmRepoFind.get() : null;
     }
-
 
     public void updateRepo(HelmRepo helmRepo) {
         if (helmRepo.isReady)
@@ -112,6 +77,24 @@ public class HelmRepoFactory {
         } catch (Exception e) {
             logger.error("Error while updating repo[{}]", helmRepo.getRepoName(), e);
             throw new IllegalStateException("Failed to update Helm repo", e);
+        }
+    }
+
+    public static class HelmRepo {
+        public HelmRepoProperties helmRepoProperties;
+        public boolean isReady;
+
+        public HelmRepo(HelmRepoProperties helmRepoProperties, boolean isReady) {
+            this.helmRepoProperties = helmRepoProperties;
+            this.isReady = isReady;
+        }
+
+        public String getRepoName() {
+            return helmRepoProperties.repoName();
+        }
+
+        public URI getUrl() {
+            return helmRepoProperties.url();
         }
     }
 }

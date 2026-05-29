@@ -1,6 +1,6 @@
 // -----------------------------------------------------------
 //
-// Rules
+// UpgraderRules
 //
 // List of all runners available
 //
@@ -118,7 +118,7 @@ class ReviewNonDefault extends React.Component {
         this.setDisplayProperty("loading", false);
 
         if (httpResponse.isError()) {
-            console.log("Rules.loadRuleCallback: error " + httpResponse.getError());
+            console.log("UpgraderRules.loadRuleCallback: error " + httpResponse.getError());
             this.setState({status: httpResponse.getError()});
         } else {
             this.setState({status:"", "result": httpResponse.getData()})

@@ -40,7 +40,7 @@ public class RulesService {
 
         // rules
         List<Map<String, Object>> rawRules = (List<Map<String, Object>>) raw.get("rules");
-        if (rawRules == null) throw new IllegalArgumentException("Rules file must contain a 'rules' list");
+        if (rawRules == null) throw new IllegalArgumentException("UpgraderRules file must contain a 'rules' list");
 
         List<Rule> rules = rawRules.stream().map(this::parseRule).toList();
         rulesFile.setRules(rules);

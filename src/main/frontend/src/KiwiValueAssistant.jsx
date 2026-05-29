@@ -13,18 +13,18 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 import {Container, Nav, Navbar} from 'react-bootstrap';
 import Upgrader from "./upgrader/Upgrader";
-import Rules from "./rules/Rules";
+import UpgraderRules from "./upgrader/UpgraderRules";
 
 
 import Review from "./review/Review";
-import ReviewNonDefault from "./review/ReviewNonDefault";
+import ReviewRules from "./review/ReviewRules";
 import HeaderMessage from "./HeaderMessage/HeaderMessage";
 
 const FRAME_NAME = {
     UPGRADER: "Upgrader",
     RULES: "Rules",
     REVIEWSINGLEVALUE: "ReviewSingleValue",
-    REVIEWNONDEFAULT: "ReviewNonDefault"
+    REVIEWRULES: "ReviewRules"
 
 }
 
@@ -75,18 +75,18 @@ class KiwiValueAssistant extends React.Component {
                                     this.clickMenu(FRAME_NAME.REVIEWSINGLEVALUE)
                                 }}>Review Single value</Nav.Link>
                             <Nav.Link
-                                active={this.state.frameContent === FRAME_NAME.REVIEWNONDEFAULT}
+                                active={this.state.frameContent === FRAME_NAME.REVIEWRULES}
                                 onClick={() => {
-                                    this.clickMenu(FRAME_NAME.REVIEWNONDEFAULT)
-                                }}>Review Get Non-defaults</Nav.Link>
+                                    this.clickMenu(FRAME_NAME.REVIEWRULES)
+                                }}>Review Rules</Nav.Link>
                         </Nav>
                     </Container>
                 </Navbar>
                 <HeaderMessage/>
                 {this.state.frameContent === FRAME_NAME.UPGRADER && <Upgrader/>}
-                {this.state.frameContent === FRAME_NAME.RULES && <Rules/>}
+                {this.state.frameContent === FRAME_NAME.RULES && <UpgraderRules/>}
                 {this.state.frameContent === FRAME_NAME.REVIEWSINGLEVALUE && <Review/>}
-                {this.state.frameContent === FRAME_NAME.REVIEWNONDEFAULT && <ReviewNonDefault/>}
+                {this.state.frameContent === FRAME_NAME.REVIEWRULES && <ReviewRules/>}
 
 
             </div>);

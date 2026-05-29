@@ -28,13 +28,12 @@ import java.util.stream.Collectors;
  * the caller posts JSON with the YAML content as strings.
  */
 @RestController
-@RequestMapping("/upgraded/api/v1")
+@RequestMapping("/upgrader/api/v1")
 public class ValuesTransformerController {
-
-    Logger logger = LoggerFactory.getLogger(ValuesTransformerController.class.getName());
 
     private final RuleUpgradeFactory ruleUpgradeFactory;
     private final TransformEngine engine;
+    Logger logger = LoggerFactory.getLogger(ValuesTransformerController.class.getName());
     private RequestAttributes requestAttributes;
 
     public ValuesTransformerController(TransformEngine engine, RuleUpgradeFactory ruleFactor) {
@@ -80,8 +79,8 @@ public class ValuesTransformerController {
             versionToTransform = RuleUpgradeFactory.VERSION.valueOf(request.getVersion());
         } catch (Exception e) {
             logger.error("Can't convert [{}] to VERSION. [{},{}] expected", request.getVersion(),
-                    RuleUpgradeFactory.VERSION.V87_88.toString(),
-                    RuleUpgradeFactory.VERSION.V88_89.toString());
+                    RuleUpgradeFactory.VERSION.V87_88,
+                    RuleUpgradeFactory.VERSION.V88_89);
             return ResponseEntity.badRequest().build();
 
         }
@@ -123,8 +122,8 @@ public class ValuesTransformerController {
             versionToTransform = RuleUpgradeFactory.VERSION.valueOf(version);
         } catch (Exception e) {
             logger.error("Can't convert [{}] to VERSION. [{},{}] expected", version,
-                    RuleUpgradeFactory.VERSION.V87_88.toString(),
-                    RuleUpgradeFactory.VERSION.V88_89.toString());
+                    RuleUpgradeFactory.VERSION.V87_88,
+                    RuleUpgradeFactory.VERSION.V88_89);
             return ResponseEntity.badRequest().build();
         }
         String rules = ruleUpgradeFactory.getRule(versionToTransform);
@@ -164,7 +163,7 @@ public class ValuesTransformerController {
     public ResponseEntity<String> validateRules(@RequestBody String rulesYaml) {
         try {
             engine.run(rulesYaml, "{}", null, true);
-            return ResponseEntity.ok("Rules file is valid.");
+            return ResponseEntity.ok("UpgraderRules file is valid.");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid rules: " + e.getMessage());
         }
