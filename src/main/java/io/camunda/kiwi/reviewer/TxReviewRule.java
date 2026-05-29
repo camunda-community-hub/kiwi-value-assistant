@@ -1,0 +1,15 @@
+package io.camunda.kiwi.reviewer;
+
+import io.camunda.kiwi.reviewer.review.FindingLevels;
+
+import java.util.List;
+
+public record TxReviewRule(
+        String expression,
+        String comment,
+        String description,
+        FindingLevels level,
+        List<String> appliedVersions,
+        List<String> links,
+        String expectedValue) {
+}

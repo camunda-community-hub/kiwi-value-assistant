@@ -5,8 +5,8 @@ set -x
 # Version of the image
 VERSION=$(grep -m1 "<version>" ../pom.xml | sed -E 's/.*<version>(.*)<\/version>.*/\1/')
 
-IMAGE_LOCAL=pierre-yves-monnet/upgrader-value
-IMAGE_REMOTE=ghcr.io/camunda-community-hub/upgrader-value
+IMAGE_LOCAL=pierre-yves-monnet/kiwi-value-assistant
+IMAGE_REMOTE=ghcr.io/camunda-community-hub/kiwi-value-assistant
 
 echo "Building Docker image version $VERSION..."
 cd ..

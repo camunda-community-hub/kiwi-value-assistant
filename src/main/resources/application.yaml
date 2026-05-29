@@ -1,6 +1,432 @@
 spring:
   application:
-    name: values-transformer
+    name: kiwi-value-assistant
 
 server:
   port: 8383
+
+review:
+  helm-repos:
+    - repo-name: camunda
+      url: https://helm.camunda.io
+    - repo-name: bitnami
+      url: https://charts.bitnami.com/bitnami
+      alternative-repo-names:
+        - oci://registry-1.docker.io/bitnamicharts
+  wildcard-properties:
+    - ".*\\.podAnnotations"
+    - ".*\\.annotations"
+    - ".*\\.podSecurityContext"
+    - ".*\\.resources"
+    - ".*\\.nodeSelector"
+    - ".*\\.extraConfig"
+    - ".*\\.logging"
+  mandatory-properties:
+    - zeebe.clusterSize
+    - zeebe.partitionCount
+    - zeebe.replicationFactor
+  rule-groups:
+    cluster-sizing:
+      name: Cluster sizing
+      description: We recommend adding cluster sizes to all values files as this is a crucial information.
+      rules:
+        at-least-3-zeebe-brokers:
+          expression: is defined (zeebe.clusterSize) and number(string(zeebe.clusterSize)) >= 3
+          comment: A zeebe cluster should have at least 3 brokers
+          level: WARNING
+          applied-versions: [ "*" ]
+          links:
+            - https://docs.camunda.io/docs/components/zeebe/technical-concepts/partitions/#replication
+          expected-value: |
+            zeebe:
+              clusterSize: 3 # at least 3
+        at-least-3-zeebe-partitions:
+          expression: is defined (zeebe.partitionCount) and number(string(zeebe.partitionCount)) >= 3
+          comment: A zeebe cluster should have at least 3 partitions
+          level: WARNING
+          applied-versions: [ "*" ]
+          links:
+            - https://docs.camunda.io/docs/components/zeebe/technical-concepts/partitions/
+          expected-value: |
+            zeebe:
+              partitionCount: 3 # at least 3
+        at-least-3-zeebe-replicas:
+          expression: is defined (zeebe.replicationFactor) and number(string(zeebe.replicationFactor)) >= 3
+          comment: A zeebe partition should have at least 3 replicas
+          level: WARNING
+          applied-versions: [ "*" ]
+          links:
+            - https://docs.camunda.io/docs/components/zeebe/technical-concepts/partitions/#replication
+            - https://docs.camunda.io/docs/reference/glossary/#replication
+          expected-value: |
+            zeebe:
+              replicationFactor: 3 # at least 3
+        odd-zeebe-replicas:
+          expression: (is defined (zeebe.replicationFactor) and odd(number(string(zeebe.replicationFactor)))) or (is defined(global) and is defined(global.multiregion) and is defined (global.multiregion.regions) and global.multiregion.regions > 1)
+          comment: We recommend odd replication factor (unless it's a multi-region setup)
+          level: WARNING
+          applied-versions: [ "*" ]
+          links:
+            - https://docs.camunda.io/docs/components/zeebe/technical-concepts/partitions/#replication
+            - https://docs.camunda.io/docs/reference/glossary/#replication
+          expected-value: |
+            zeebe:
+              replicationFactor: 3 # odd number
+        zeebe-storage-class:
+          expression: is defined (zeebe.pvcStorageClassName)
+          comment: "Zeebe requires Block Storage with at least 1000 IOPS. Important: Zeebe doesn't support NFS!"
+          level: CLARIFICATION
+          applied-versions: [ "*" ]
+          links:
+            - https://docs.camunda.io/docs/self-managed/zeebe-deployment/zeebe-installation/
+            - https://docs.camunda.io/docs/reference/supported-environments/#volume-performance
+          expected-value: |
+            zeebe:
+              pvcStorageClassName: ssd-with-sufficient-iops
+
+    index-replication:
+      name: Index replication
+      description: We recommend to control the shards' number and replication.
+      rules:
+        zeebe-es-define-additional-primary:
+          expression: is defined(zeebe.env) and list contains(zeebe.env.name, "ZEEBE_BROKER_EXPORTERS_ELASTICSEARCH_ARGS_INDEX_NUMBEROFSHARDS")
+          comment: The Zeebe Elasticsearch exporter should define the amount of primary shards
+          description: The amount of primary shards is 3 by default which is appropriate for higher loads. Basic setups will require less, and large setups might require more.
+          level: WARNING
+          applied-versions: [ "*" ]
+          links:
+            - https://docs.camunda.io/docs/self-managed/zeebe-deployment/exporters/elasticsearch-exporter/?configuration=index#configuration
+          expected-value: |
+            zeebe:
+              env:
+              - name: ZEEBE_BROKER_EXPORTERS_ELASTICSEARCH_ARGS_INDEX_NUMBEROFSHARDS
+                value: "1" # should be defaulted to one and increased on higher expected throughput
+        zeebe-es-define-additional-replicas:
+          expression: is defined(zeebe.env) and list contains(zeebe.env.name, "ZEEBE_BROKER_EXPORTERS_ELASTICSEARCH_ARGS_INDEX_NUMBEROFREPLICAS")
+          comment: The Zeebe Elasticsearch exporter should define the amount of replica shards
+          level: WARNING
+          applied-versions: [ "*" ]
+          links:
+            - https://docs.camunda.io/docs/self-managed/zeebe-deployment/exporters/elasticsearch-exporter/?configuration=index#configuration
+          expected-value: |
+            zeebe:
+              env:
+              - name: ZEEBE_BROKER_EXPORTERS_ELASTICSEARCH_ARGS_INDEX_NUMBEROFREPLICAS
+                value: "1" # at least 1
+        operate-es-define-additional-replicas:
+          expression: is defined (operate.env) and list contains(operate.env.name, "CAMUNDA_OPERATE_ELASTICSEARCH_NUMBEROFREPLICAS")
+          comment: Operate should define replicas for its Elasticsearch shards
+          level: WARNING
+          applied-versions: [ "*" ]
+          links:
+            - https://docs.camunda.io/docs/self-managed/operate-deployment/operate-configuration/#settings-for-shards-and-replicas
+          expected-value: |
+            operate:
+              env:
+              - name: CAMUNDA_OPERATE_ELASTICSEARCH_NUMBEROFREPLICAS
+                value: 1 # at least 1
+        operate-es-define-additional-replicas-on-migration-container:
+          expression: is defined (operate.migration.env) and list contains(operate.migration.env.name, "CAMUNDA_OPERATE_ELASTICSEARCH_NUMBEROFREPLICAS")
+          comment: Operate should define replicas for its Elasticsearch shards also on its migration container
+          level: WARNING
+          applied-versions: [ ">= 10.3.0" ]
+          links:
+            - https://docs.camunda.io/docs/self-managed/operate-deployment/operate-configuration/#settings-for-shards-and-replicas
+          expected-value: |
+            operate:
+              migration:
+                env:
+                - name: CAMUNDA_OPERATE_ELASTICSEARCH_NUMBEROFREPLICAS
+                  value: 1 # at least 1
+        operate-es-define-additional-shards:
+          expression: is defined (operate.env) and list contains(operate.env.name, "CAMUNDA_OPERATE_ELASTICSEARCH_NUMBEROFSHARDS")
+          comment: Operate should define shards for its Elasticsearch indexes
+          level: INFO
+          applied-versions: [ "*" ]
+          links:
+            - https://docs.camunda.io/docs/self-managed/operate-deployment/operate-configuration/#settings-for-shards-and-replicas
+          expected-value: |
+            operate:
+              env:
+              - name: CAMUNDA_OPERATE_ELASTICSEARCH_NUMBEROFSHARDS
+                value: 1 # as 1 is default, put more than 1, depending on the ES cluster size
+        operate-es-define-additional-shards-on-migration-container:
+          expression: is defined (operate.migration.env) and list contains(operate.migration.env.name, "CAMUNDA_OPERATE_ELASTICSEARCH_NUMBEROFSHARDS")
+          comment: Operate should define shards for its Elasticsearch indexes also on its migration container
+          level: INFO
+          applied-versions: [ ">= 10.3.0" ]
+          links:
+            - https://docs.camunda.io/docs/self-managed/operate-deployment/operate-configuration/#settings-for-shards-and-replicas
+          expected-value: |
+            operate:
+              migration:
+                env:
+                - name: CAMUNDA_OPERATE_ELASTICSEARCH_NUMBEROFSHARDS
+                  value: 1 # as 1 is default, put more than 1, depending on the ES cluster size
+        tasklist-es-define-additional-replicas:
+          expression: is defined (tasklist.env) and list contains(tasklist.env.name, "CAMUNDA_TASKLIST_ELASTICSEARCH_NUMBEROFREPLICAS")
+          comment: Tasklist should define replicas for its Elasticsearch shards
+          level: WARNING
+          applied-versions: [ "*" ]
+          links:
+            - https://docs.camunda.io/docs/self-managed/tasklist-deployment/tasklist-configuration/#settings-for-shards-and-replicas
+          expected-value: |
+            tasklist:
+              env:
+              - name: CAMUNDA_TASKLIST_ELASTICSEARCH_NUMBEROFREPLICAS
+                value: 1 # at least 1
+        tasklist-es-define-additional-shards:
+          expression: is defined (tasklist.env) and list contains(tasklist.env.name, "CAMUNDA_TASKLIST_ELASTICSEARCH_NUMBEROFSHARDS")
+          comment: Tasklist should define shards for its Elasticsearch indexes
+          level: INFO
+          applied-versions: [ "*" ]
+          links:
+            - https://docs.camunda.io/docs/self-managed/tasklist-deployment/tasklist-configuration/#settings-for-shards-and-replicas
+          expected-value: |
+            tasklist:
+              env:
+              - name: CAMUNDA_TASKLIST_ELASTICSEARCH_NUMBEROFSHARDS
+                value: 1 # as 1 is default, put more than 1, depending on the ES cluster size
+        optimize-es-define-additional-replicas:
+          expression: is defined (optimize.env) and list contains(optimize.env.name, "ES_SETTINGS_INDEX_NUMBEROFREPLICAS")
+          comment: Optimize should define replicas for its Elasticsearch shards
+          level: INFO
+          applied-versions: [ "*" ]
+          links:
+            - https://docs.camunda.io/optimize/self-managed/optimize-deployment/configuration/system-configuration/#index-settings
+          expected-value: |
+            optimize:
+              env:
+              - name: CAMUNDA_OPTIMIZE_ELASTICSEARCH_SETTINGS_INDEX_NUMBER_OF_REPLICAS
+                value: 1 # as 1 is default, put more than 1, depending on the ES cluster size
+        optimize-es-define-additional-replicas-on-migration-container:
+          expression: is defined (optimize.migration.env) and list contains(optimize.migration.env.name, "ES_SETTINGS_INDEX_NUMBEROFREPLICAS")
+          comment: Optimize should define replicas for its Elasticsearch shards also on its migration container
+          level: INFO
+          applied-versions: [ ">= 8.3.1" ]
+          links:
+            - https://docs.camunda.io/optimize/self-managed/optimize-deployment/configuration/system-configuration/#index-settings
+          expected-value: |
+            optimize:
+              migration:
+                env:
+                - name: CAMUNDA_OPTIMIZE_ELASTICSEARCH_SETTINGS_INDEX_NUMBER_OF_REPLICAS
+                  value: 1 # as 1 is default, put more than 1, depending on the ES cluster size
+        optimize-es-define-additional-shards:
+          expression: is defined (optimize.env) and list contains(optimize.env.name, "ES_SETTINGS_INDEX_NUMBEROFSHARDS")
+          comment: Optimize should define shards for its Elasticsearch indexes
+          level: INFO
+          applied-versions: [ "*" ]
+          links:
+            - https://docs.camunda.io/optimize/self-managed/optimize-deployment/configuration/system-configuration/#index-settings
+          expected-value: |
+            optimize:
+              env:
+              - name: CAMUNDA_OPTIMIZE_ELASTICSEARCH_SETTINGS_INDEX_NUMBER_OF_SHARDS
+                value: 1 # as 1 is default, put more than 1, depending on the ES cluster size
+        optimize-es-define-additional-shards-on-migration-container:
+          expression: is defined (optimize.migration.env) and list contains(optimize.migration.env.name, "ES_SETTINGS_INDEX_NUMBEROFSHARDS")
+          comment: Optimize should define shards for its Elasticsearch indexes also on its migration container
+          level: INFO
+          applied-versions: [ ">= 8.3.1" ]
+          links:
+            - https://docs.camunda.io/optimize/self-managed/optimize-deployment/configuration/system-configuration/#index-settings
+          expected-value: |
+            optimize:
+              migration:
+                env:
+                - name: CAMUNDA_OPTIMIZE_ELASTICSEARCH_SETTINGS_INDEX_NUMBER_OF_SHARDS
+                  value: 1 # as 1 is default, put more than 1, depending on the ES cluster size
+
+    data-cleanup:
+      name: Data cleanup
+      description: We recommend to enable the data cleanup for all components.
+      rules:
+        zeebe-enable-retention:
+          expression: is defined (zeebe.retention.enabled) and zeebe.retention.enabled = true
+          comment: Zeebe retention should be enabled
+          level: WARNING
+          applied-versions: [ ">= 8.3" ]
+          links:
+            - https://docs.camunda.io/docs/self-managed/zeebe-deployment/exporters/elasticsearch-exporter/?configuration=retention
+          expected-value: |
+            zeebe:
+              retention:
+                enabled: true
+        operate-enable-retention:
+          expression: is defined (operate.retention.enabled) and operate.retention.enabled = true
+          comment: Operate retention should be enabled
+          level: WARNING
+          applied-versions: [ ">= 8.3" ]
+          links:
+            - https://docs.camunda.io/docs/self-managed/operate-deployment/data-retention
+          expected-value: |
+            operate:
+              retention:
+                enabled: true
+        tasklist-enable-retention:
+          expression: is defined (tasklist.retention.enabled) and tasklist.retention.enabled = true
+          comment: Tasklist retention should be enabled
+          level: WARNING
+          applied-versions: [ ">= 8.3" ]
+          links:
+            - https://docs.camunda.io/docs/self-managed/tasklist-deployment/data-retention
+          expected-value: |
+            tasklist:
+              retention:
+                enabled: true
+        optimize-process-data-cleanup-enabled:
+          expression: is defined (optimize.env) and list contains(optimize.env.name, "CAMUNDA_OPTIMIZE_HISTORY_CLEANUP_PROCESS_DATA_CLEANUP_ENABLED") and optimize.env[item.name = "CAMUNDA_OPTIMIZE_HISTORY_CLEANUP_PROCESS_DATA_CLEANUP_ENABLED"].value = ["true"]
+          comment: Optimize process data cleanup should be enabled
+          level: WARNING
+          applied-versions: [ "*" ]
+          links:
+            - https://docs.camunda.io/optimize/self-managed/optimize-deployment/configuration/history-cleanup/
+          expected-value: |
+            optimize:
+              env:
+              - name: CAMUNDA_OPTIMIZE_HISTORY_CLEANUP_PROCESS_DATA_CLEANUP_ENABLED
+                value: "true"
+    misc:
+      name: Misc
+      description: Recommendations we make for other components
+      rules:
+        elasticsearch-anti-affinity-set:
+          expression: (is defined(elasticsearch.enabled) and not(elasticsearch.enabled)) or is defined(elasticsearch.master.podAntiAffinityPreset)
+          comment: Elasticsearch should use pod anti-affinity
+          level: WARNING
+          applied-versions: [ "*" ]
+          links:
+            - https://artifacthub.io/packages/helm/bitnami/elasticsearch#setting-pod-s-affinity
+          expected-value: |
+            elasticsearch:
+              master:
+                podAntiAffinityPreset: hard # can also be soft
+        web-modeler-in-prod:
+          expression: not(is defined(webModeler.enabled)) or not(webModeler.enabled)
+          comment: Web Modeler typically is not part of PROD Deployment. Deployment to PROD should be done via CI/CD Pipeline or similar.
+          level: WARNING
+          applied-versions: [ "*" ]
+          links:
+            - https://docs.camunda.io/docs/guides/devops-lifecycle/integrate-web-modeler-in-ci-cd/
+            - https://docs.camunda.io/docs/self-managed/modeler/web-modeler/configuration/#feature-flags
+            - https://marketplace.camunda.com/en-US/apps/439170/cicd-pipeline
+          expected-value: |
+            webModeler:
+              enabled: false
+        keycloak-in-prod:
+          expression: is defined (identityKeycloak.enabled) and not(identityKeycloak.enabled)
+          comment: Keycloak typically is not deployed with the Camunda Helm Chart in PROD
+          level: INFO
+          applied-versions: [ ">= 10" ]
+          links:
+            - https://docs.camunda.io/docs/self-managed/setup/guides/connect-to-an-oidc-provider/
+            - https://docs.camunda.io/docs/self-managed/setup/guides/using-existing-keycloak/
+          expected-value: |
+            identityKeycloak:
+              enabled: false
+        keycloak-in-prod-pre-10:
+          expression: is defined (identity.keycloak.enabled) and not(identity.keycloak.enabled)
+          comment: Keycloak typically is not deployed with the Camunda Helm Chart in PROD
+          level: INFO
+          applied-versions: [ "< 10" ]
+          links:
+            - https://docs.camunda.io/docs/self-managed/setup/guides/connect-to-an-oidc-provider/
+            - https://docs.camunda.io/docs/self-managed/setup/guides/using-existing-keycloak/
+          expected-value: |
+            identity:
+              keycloak:
+                enabled: false
+        license-key-missing:
+          expression: (is defined (global.license.existingSecret) and is defined (global.license.existingSecretKey)) or is defined (global.license.key)
+          comment: License Key is required
+          level: WARNING
+          applied-versions: [ ">= 11" ]
+          links:
+            - https://docs.camunda.io/docs/self-managed/setup/install/#configure-license-key
+            - https://docs.camunda.io/docs/reference/announcements/#license-key-changes
+            - https://camunda.com/blog/2024/04/licensing-update-camunda-8-self-managed/
+          expected-value: |
+            global:
+              license:
+                existingSecret: c8-license-secret
+                existingSecretKey: c8-license
+
+    backup:
+      name: Backup
+      description: Backup Configurations
+      rules:
+        operate-backup:
+          expression: is defined (operate.env) and list contains(operate.env.name, "CAMUNDA_OPERATE_BACKUP_REPOSITORY_NAME")
+          comment: Operate should define backup location
+          level: WARNING
+          applied-versions: [ "*" ]
+          links:
+            - https://docs.camunda.io/docs/self-managed/operational-guides/backup-restore/backup-and-restore/
+            - https://docs.camunda.io/docs/self-managed/operational-guides/backup-restore/operate-tasklist-backup/
+          expected-value: |
+            operate:
+              env:
+                - name: CAMUNDA_OPERATE_BACKUP_REPOSITORY_NAME
+                  value: "operate-backup"
+        tasklist-backup:
+          expression: is defined (tasklist.env) and list contains(tasklist.env.name, "CAMUNDA_TASKLIST_BACKUP_REPOSITORY_NAME")
+          comment: Tasklist should define backup location
+          level: WARNING
+          applied-versions: [ "*" ]
+          links:
+            - https://docs.camunda.io/docs/self-managed/operational-guides/backup-restore/backup-and-restore/
+            - https://docs.camunda.io/docs/self-managed/operational-guides/backup-restore/operate-tasklist-backup/
+          expected-value: |
+            tasklist:
+              env:
+                - name: CAMUNDA_TASKLIST_BACKUP_REPOSITORY_NAME
+                  value: "tasklist-backup"
+        optimize-backup:
+          expression: is defined (optimize.env) and list contains(optimize.env.name, "CAMUNDA_OPTIMIZE_BACKUP_REPOSITORY_NAME")
+          comment: Optimize should define backup location
+          level: WARNING
+          applied-versions: [ "*" ]
+          links:
+            - https://docs.camunda.io/docs/self-managed/operational-guides/backup-restore/backup-and-restore/
+            - https://docs.camunda.io/docs/self-managed/operational-guides/backup-restore/optimize-backup/
+          expected-value: |
+            optimize:
+              env:
+                - name: CAMUNDA_OPTIMIZE_BACKUP_REPOSITORY_NAME
+                  value: "optimize-backup"
+        zeebe-backup:
+          expression: is defined (zeebe.env) and list contains(zeebe.env.name, "ZEEBE_BROKER_DATA_BACKUP_STORE")
+          comment: Zeebe should define backup location
+          level: WARNING
+          applied-versions: [ "*" ]
+          links:
+            - https://docs.camunda.io/docs/self-managed/operational-guides/backup-restore/backup-and-restore/
+            - https://docs.camunda.io/docs/self-managed/operational-guides/backup-restore/zeebe-backup-and-restore/
+          expected-value: |
+            zeebe:
+              env:
+                - name: ZEEBE_BROKER_DATA_BACKUP_STORE
+                  value: "S3"
+
+    monitoring:
+      name: Monitoring
+      description: Monitoring Configurations
+      rules:
+        zeebe-monitoring:
+          expression: is defined (zeebe.env) and list contains(zeebe.env.name, "ZEEBE_BROKER_EXECUTION_METRICS_EXPORTER_ENABLED")
+          comment: Additional Metrics can be exposed for the Brokers
+          level: INFO
+          applied-versions: [ "*" ]
+          links:
+            - https://docs.camunda.io/docs/self-managed/zeebe-deployment/operations/metrics/#enable-additional-metrics
+          expected-value: |
+            zeebe:
+              env:
+                - name: ZEEBE_BROKER_EXECUTION_METRICS_EXPORTER_ENABLED
+                  value: "true"
+
+  logging:
+    level:
+      com.camunda.consulting: debug
+

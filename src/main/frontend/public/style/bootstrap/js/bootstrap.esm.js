@@ -677,7 +677,7 @@ var CLASS_NAME_FADE = 'fade';
 var CLASS_NAME_SHOW = 'show';
 /**
  * ------------------------------------------------------------------------
- * Class Rules
+ * Class UpgraderRules
  * ------------------------------------------------------------------------
  */
 
@@ -805,7 +805,7 @@ var SELECTOR_DATA_TOGGLE = '[data-bs-toggle="button"]';
 var EVENT_CLICK_DATA_API$1 = "click" + EVENT_KEY$1 + DATA_API_KEY$1;
 /**
  * ------------------------------------------------------------------------
- * Class Rules
+ * Class UpgraderRules
  * ------------------------------------------------------------------------
  */
 
@@ -1096,7 +1096,7 @@ var POINTER_TYPE_TOUCH = 'touch';
 var POINTER_TYPE_PEN = 'pen';
 /**
  * ------------------------------------------------------------------------
- * Class Rules
+ * Class UpgraderRules
  * ------------------------------------------------------------------------
  */
 
@@ -1660,7 +1660,7 @@ var SELECTOR_ACTIVES = '.show, .collapsing';
 var SELECTOR_DATA_TOGGLE$1 = '[data-bs-toggle="collapse"]';
 /**
  * ------------------------------------------------------------------------
- * Class Rules
+ * Class UpgraderRules
  * ------------------------------------------------------------------------
  */
 
@@ -2075,7 +2075,7 @@ var DefaultType$2 = {
 };
 /**
  * ------------------------------------------------------------------------
- * Class Rules
+ * Class UpgraderRules
  * ------------------------------------------------------------------------
  */
 
@@ -2582,7 +2582,7 @@ var SELECTOR_FIXED_CONTENT = '.fixed-top, .fixed-bottom, .is-fixed, .sticky-top'
 var SELECTOR_STICKY_CONTENT = '.sticky-top';
 /**
  * ------------------------------------------------------------------------
- * Class Rules
+ * Class UpgraderRules
  * ------------------------------------------------------------------------
  */
 
@@ -3347,7 +3347,7 @@ var TRIGGER_CLICK = 'click';
 var TRIGGER_MANUAL = 'manual';
 /**
  * ------------------------------------------------------------------------
- * Class Rules
+ * Class UpgraderRules
  * ------------------------------------------------------------------------
  */
 
@@ -4078,7 +4078,7 @@ var SELECTOR_TITLE = '.popover-header';
 var SELECTOR_CONTENT = '.popover-body';
 /**
  * ------------------------------------------------------------------------
- * Class Rules
+ * Class UpgraderRules
  * ------------------------------------------------------------------------
  */
 
@@ -4240,7 +4240,7 @@ var METHOD_OFFSET = 'offset';
 var METHOD_POSITION = 'position';
 /**
  * ------------------------------------------------------------------------
- * Class Rules
+ * Class UpgraderRules
  * ------------------------------------------------------------------------
  */
 
@@ -4519,7 +4519,7 @@ var SELECTOR_DROPDOWN_TOGGLE$1 = '.dropdown-toggle';
 var SELECTOR_DROPDOWN_ACTIVE_CHILD = ':scope > .dropdown-menu .active';
 /**
  * ------------------------------------------------------------------------
- * Class Rules
+ * Class UpgraderRules
  * ------------------------------------------------------------------------
  */
 
@@ -4722,7 +4722,7 @@ var Default$7 = {
 var SELECTOR_DATA_DISMISS$1 = '[data-bs-dismiss="toast"]';
 /**
  * ------------------------------------------------------------------------
- * Class Rules
+ * Class UpgraderRules
  * ------------------------------------------------------------------------
  */
 
