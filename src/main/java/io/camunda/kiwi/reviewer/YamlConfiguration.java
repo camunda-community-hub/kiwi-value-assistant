@@ -15,14 +15,14 @@ import java.util.List;
 @Configuration
 public class YamlConfiguration implements WebMvcConfigurer {
 
-  @Override
-  public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
-    converters.add(new YamlJackson2HttpMessageConverter());
-  }
-
-  static final class YamlJackson2HttpMessageConverter extends AbstractJackson2HttpMessageConverter {
-    YamlJackson2HttpMessageConverter() {
-      super(new YAMLMapper(), MediaType.parseMediaType("application/x-yaml"));
+    @Override
+    public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+        converters.add(new YamlJackson2HttpMessageConverter());
     }
-  }
+
+    static final class YamlJackson2HttpMessageConverter extends AbstractJackson2HttpMessageConverter {
+        YamlJackson2HttpMessageConverter() {
+            super(new YAMLMapper(), MediaType.parseMediaType("application/x-yaml"));
+        }
+    }
 }

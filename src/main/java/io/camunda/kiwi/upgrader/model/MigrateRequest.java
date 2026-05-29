@@ -4,7 +4,7 @@ package io.camunda.kiwi.upgrader.model;
 /**
  * Request body for the POST /migrate endpoint.
  * Replaces the CLI flags from Go's cmd/root.go (cobra command).
- *
+ * <p>
  * All YAML content is passed as raw strings so the API is stateless
  * and does not depend on the server's filesystem.
  */

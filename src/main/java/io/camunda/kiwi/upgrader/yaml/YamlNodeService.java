@@ -9,9 +9,9 @@ import java.util.*;
 /**
  * Provides dot-notation path operations on YAML documents represented as
  * nested Map<String, Object> trees (SnakeYAML's natural representation).
- *
+ * <p>
  * Equivalent to Go's pkg/yaml/dotpath.go and pkg/yaml/merge.go.
- *
+ * <p>
  * Note: Unlike the Go version which preserves comments via yaml.Node trees,
  * SnakeYAML's map representation does not preserve YAML comments.
  * Comments are therefore not preserved in the output (acceptable tradeoff for Java).

@@ -16,10 +16,6 @@ public enum TargetType {
         this.value = value;
     }
 
-    public String getValue() {
-        return value;
-    }
-
     public static TargetType fromValue(String value) {
         for (TargetType type : values()) {
             if (type.value.equals(value)) {
@@ -27,6 +23,10 @@ public enum TargetType {
             }
         }
         throw new IllegalArgumentException("Unknown target type: " + value);
+    }
+
+    public String getValue() {
+        return value;
     }
 
     @Override

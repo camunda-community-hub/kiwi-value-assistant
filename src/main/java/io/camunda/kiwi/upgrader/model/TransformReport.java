@@ -11,63 +11,6 @@ import java.util.List;
 
 public class TransformReport {
 
-    public enum EntryKind {
-        ERROR, WARNING, CHANGE, SKIP
-    }
-
-    /**
-     * A single item in the transformation report.
-     * Equivalent to Go's report.Entry struct.
-     */
-    public static class Entry {
-        private final EntryKind kind;
-        private final String ruleType;
-        private final String path;
-        private final String description;
-        private final String detail;
-
-        public Entry(EntryKind entryKind, String ruleType, String path, String description, String detail) {
-            this.kind = entryKind;
-            this.ruleType = ruleType;
-            this.path = path;
-            this.description = description;
-            this.detail = detail;
-        }
-
-        @Override
-        public String toString() {
-            String desc = (description != null && !description.isEmpty()) ? description : detail;
-            StringBuilder sb = new StringBuilder();
-            sb.append("  [").append(ruleType).append("]");
-            if (path != null && !path.isEmpty()) sb.append(" ").append(path);
-            if (desc != null && !desc.isEmpty()) sb.append(" - ").append(desc);
-            if (detail != null && !detail.isEmpty() && !detail.equals(desc)) {
-                sb.append(" (").append(detail).append(")");
-            }
-            return sb.toString();
-        }
-
-        public EntryKind getKind() {
-            return kind;
-        }
-
-        public String getRuleType() {
-            return ruleType;
-        }
-
-        public String getPath() {
-            return path;
-        }
-
-        public String getDescription() {
-            return description;
-        }
-
-        public String getDetail() {
-            return detail;
-        }
-    }
-
     private final List<Entry> entries = new ArrayList<>();
 
     public void addChange(String ruleType, String path, String description, String detail) {
@@ -138,6 +81,63 @@ public class TransformReport {
             sb.append(title).append("\n");
             section.forEach(e -> sb.append(e).append("\n"));
             sb.append("\n");
+        }
+    }
+
+    public enum EntryKind {
+        ERROR, WARNING, CHANGE, SKIP
+    }
+
+    /**
+     * A single item in the transformation report.
+     * Equivalent to Go's report.Entry struct.
+     */
+    public static class Entry {
+        private final EntryKind kind;
+        private final String ruleType;
+        private final String path;
+        private final String description;
+        private final String detail;
+
+        public Entry(EntryKind entryKind, String ruleType, String path, String description, String detail) {
+            this.kind = entryKind;
+            this.ruleType = ruleType;
+            this.path = path;
+            this.description = description;
+            this.detail = detail;
+        }
+
+        @Override
+        public String toString() {
+            String desc = (description != null && !description.isEmpty()) ? description : detail;
+            StringBuilder sb = new StringBuilder();
+            sb.append("  [").append(ruleType).append("]");
+            if (path != null && !path.isEmpty()) sb.append(" ").append(path);
+            if (desc != null && !desc.isEmpty()) sb.append(" - ").append(desc);
+            if (detail != null && !detail.isEmpty() && !detail.equals(desc)) {
+                sb.append(" (").append(detail).append(")");
+            }
+            return sb.toString();
+        }
+
+        public EntryKind getKind() {
+            return kind;
+        }
+
+        public String getRuleType() {
+            return ruleType;
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public String getDetail() {
+            return detail;
         }
     }
 

@@ -10,10 +10,6 @@ import java.nio.charset.StandardCharsets;
 @Component
 public class RuleUpgradeFactory {
 
-    public enum VERSION {
-        V87_88,
-        V88_89
-    }
     public String getRule(VERSION version) {
         String fileName = resolveFileName(version);
 
@@ -29,5 +25,10 @@ public class RuleUpgradeFactory {
             case V87_88 -> "upgrader/camunda-87-to-88-rules.yaml";
             case V88_89 -> "upgrader/camunda-88-to-89-rules.yaml";
         };
+    }
+
+    public enum VERSION {
+        V87_88,
+        V88_89
     }
 }

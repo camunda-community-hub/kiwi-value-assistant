@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * Performs the full transformation pipeline on a values.yaml document.
  * Equivalent to Go's pkg/transform/engine.go (Engine struct and Run method).
- *
+ * <p>
  * Replaces CLI-based I/O with in-memory string processing,
  * making it suitable for a REST API.
  */
@@ -39,13 +39,13 @@ public class TransformEngine {
      * 4. Apply rules (operations fall back to defaults for missing keys)
      * 5. Prune empty maps left behind by moves/deletes
      * 6. Return result
-     *
+     * <p>
      * Equivalent to Go's Engine.Run().
      *
-     * @param rulesYaml        YAML string of the rules file (required)
-     * @param inputYaml        YAML string of the user's values.yaml (required)
-     * @param oldDefaultsYaml  YAML string of the old chart defaults (optional, may be null)
-     * @param dryRun           if true, returns null outputYaml
+     * @param rulesYaml       YAML string of the rules file (required)
+     * @param inputYaml       YAML string of the user's values.yaml (required)
+     * @param oldDefaultsYaml YAML string of the old chart defaults (optional, may be null)
+     * @param dryRun          if true, returns null outputYaml
      * @return EngineResult with the transformed YAML and report
      */
     public EngineResult run(String rulesYaml, String inputYaml, String oldDefaultsYaml, boolean dryRun) {
@@ -92,14 +92,14 @@ public class TransformEngine {
             String desc = rule.getDescription();
 
             ApplyResult result = switch (rule.getType()) {
-                case MOVE         -> operationsService.applyMove(root, originalUserValues, defaults, rule);
-                case DELETE       -> operationsService.applyDelete(root, rule);
-                case RETYPE       -> operationsService.applyRetype(root, defaults, rule);
-                case MAP_VALUES   -> operationsService.applyMapValues(root, defaults, rule);
-                case TEMPLATE     -> operationsService.applyTemplate(root, originalUserValues, defaults, rule);
+                case MOVE -> operationsService.applyMove(root, originalUserValues, defaults, rule);
+                case DELETE -> operationsService.applyDelete(root, rule);
+                case RETYPE -> operationsService.applyRetype(root, defaults, rule);
+                case MAP_VALUES -> operationsService.applyMapValues(root, defaults, rule);
+                case TEMPLATE -> operationsService.applyTemplate(root, originalUserValues, defaults, rule);
                 case MERGE_TO_LIST -> operationsService.applyMergeToList(root, originalUserValues, defaults, rule);
-                case NOTIFY       -> operationsService.applyNotify(originalUserValues, rule);
-                case SET_DEFAULT  -> operationsService.applySetDefault(root, originalUserValues, rule);
+                case NOTIFY -> operationsService.applyNotify(originalUserValues, rule);
+                case SET_DEFAULT -> operationsService.applySetDefault(root, originalUserValues, rule);
             };
 
             // Resolve the most meaningful path for the report
@@ -124,5 +124,6 @@ public class TransformEngine {
     /**
      * Result of a transformation run.
      */
-    public record EngineResult(String outputYaml, TransformReport report) {}
+    public record EngineResult(String outputYaml, TransformReport report) {
+    }
 }

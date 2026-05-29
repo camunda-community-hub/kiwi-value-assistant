@@ -9,13 +9,19 @@ import java.util.List;
 
 public class RulesFile {
 
-    /** Schema version of the rules file. Defaults to 1. */
+    /**
+     * Schema version of the rules file. Defaults to 1.
+     */
     private int version = 1;
 
-    /** Human-readable description of this migration. */
+    /**
+     * Human-readable description of this migration.
+     */
     private String description;
 
-    /** Ordered list of transformation rules. */
+    /**
+     * Ordered list of transformation rules.
+     */
     private List<Rule> rules;
 
     public int getVersion() {

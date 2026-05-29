@@ -3,81 +3,81 @@ package io.camunda.kiwi.reviewer;
 import com.fasterxml.jackson.core.Version;
 
 public sealed interface VersionRange {
-  default <T extends VersionRange> T as(Class<T> clazz) {
-    return (T) this;
-  }
-
-  boolean matches(Version version);
-
-  record Equals(Version version) implements VersionRange {
-    @Override
-    public boolean matches(Version version) {
-      return version.compareTo(this.version) == 0;
+    default <T extends VersionRange> T as(Class<T> clazz) {
+        return (T) this;
     }
 
-    @Override
-    public String toString() {
-      return "=" + version;
-    }
-  }
+    boolean matches(Version version);
 
-  record Wildcard() implements VersionRange {
-    @Override
-    public boolean matches(Version version) {
-      return true;
-    }
+    record Equals(Version version) implements VersionRange {
+        @Override
+        public boolean matches(Version version) {
+            return version.compareTo(this.version) == 0;
+        }
 
-    @Override
-    public String toString() {
-      return "*";
-    }
-  }
-
-  record Greater(Version version) implements VersionRange {
-    @Override
-    public boolean matches(Version version) {
-      return version.compareTo(this.version) > 0;
+        @Override
+        public String toString() {
+            return "=" + version;
+        }
     }
 
-    @Override
-    public String toString() {
-      return ">" + version;
-    }
-  }
+    record Wildcard() implements VersionRange {
+        @Override
+        public boolean matches(Version version) {
+            return true;
+        }
 
-  record Lower(Version version) implements VersionRange {
-    @Override
-    public boolean matches(Version version) {
-      return version.compareTo(this.version) < 0;
-    }
-
-    @Override
-    public String toString() {
-      return "<" + version;
-    }
-  }
-
-  record GreaterEquals(Version version) implements VersionRange {
-    @Override
-    public boolean matches(Version version) {
-      return version.compareTo(this.version) >= 0;
+        @Override
+        public String toString() {
+            return "*";
+        }
     }
 
-    @Override
-    public String toString() {
-      return ">=" + version;
-    }
-  }
+    record Greater(Version version) implements VersionRange {
+        @Override
+        public boolean matches(Version version) {
+            return version.compareTo(this.version) > 0;
+        }
 
-  record LowerEquals(Version version) implements VersionRange {
-    @Override
-    public boolean matches(Version version) {
-      return version.compareTo(this.version) <= 0;
+        @Override
+        public String toString() {
+            return ">" + version;
+        }
     }
 
-    @Override
-    public String toString() {
-      return "<=" + version;
+    record Lower(Version version) implements VersionRange {
+        @Override
+        public boolean matches(Version version) {
+            return version.compareTo(this.version) < 0;
+        }
+
+        @Override
+        public String toString() {
+            return "<" + version;
+        }
     }
-  }
+
+    record GreaterEquals(Version version) implements VersionRange {
+        @Override
+        public boolean matches(Version version) {
+            return version.compareTo(this.version) >= 0;
+        }
+
+        @Override
+        public String toString() {
+            return ">=" + version;
+        }
+    }
+
+    record LowerEquals(Version version) implements VersionRange {
+        @Override
+        public boolean matches(Version version) {
+            return version.compareTo(this.version) <= 0;
+        }
+
+        @Override
+        public String toString() {
+            return "<=" + version;
+        }
+    }
 }

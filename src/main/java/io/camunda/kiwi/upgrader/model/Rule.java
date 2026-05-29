@@ -7,48 +7,68 @@ import java.util.Map;
 /**
  * Represents a single transformation rule.
  * Equivalent to Go's Rule struct in pkg/transform/types.go.
- *
+ * <p>
  * In Go, `from` could be a scalar or a list (yaml.Node).
  * Here we model it as a List<String> populated by the RulesFile deserializer.
  */
 
 public class Rule {
 
-    /** Type of transformation. */
+    /**
+     * Type of transformation.
+     */
     private RuleType type;
 
-    /** Human-readable explanation of why this rule exists. */
+    /**
+     * Human-readable explanation of why this rule exists.
+     */
     private String description;
 
     // --- move / template ---
-    /** Source dot-path(s). Can be a single string or a list (for template rules). */
+    /**
+     * Source dot-path(s). Can be a single string or a list (for template rules).
+     */
     private List<String> from;
 
-    /** Destination dot-path (move, template, merge-to-list). */
+    /**
+     * Destination dot-path (move, template, merge-to-list).
+     */
     private String to;
 
     // --- delete / retype / notify / set-default ---
-    /** Dot-path for delete, retype, notify, set-default, and map-values operations. */
+    /**
+     * Dot-path for delete, retype, notify, set-default, and map-values operations.
+     */
     private String path;
 
     // --- retype ---
-    /** Target type for retype operations: int, float, bool, string. */
+    /**
+     * Target type for retype operations: int, float, bool, string.
+     */
     private String toType;
 
     // --- map-values ---
-    /** Maps old discrete values to new ones. */
+    /**
+     * Maps old discrete values to new ones.
+     */
     private Map<String, String> mapping;
 
     // --- template ---
-    /** Go/Java template string for computing new values. */
+    /**
+     * Go/Java template string for computing new values.
+     */
     private String template;
 
     // --- notify ---
-    /** Message to display to the user when a notify rule triggers. */
+    /**
+     * Message to display to the user when a notify rule triggers.
+     */
     private String message;
 
     // --- set-default ---
-    /** Raw YAML string value to set when a set-default rule fires. */
+    /**
+     * Raw YAML string value to set when a set-default rule fires.
+     */
     private String value;
 
     /**

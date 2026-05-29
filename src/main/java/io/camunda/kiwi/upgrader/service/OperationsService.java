@@ -6,14 +6,16 @@ import io.camunda.kiwi.upgrader.model.TargetType;
 import io.camunda.kiwi.upgrader.yaml.YamlNodeService;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * Implements each transformation operation.
  * Equivalent to Go's pkg/transform/operations.go.
- *
+ * <p>
  * Note on templates: Go templates use {{.Values.key}} syntax.
  * Java does not have a built-in equivalent, so we use simple
  * {{key}} substitution backed by the flat values map.
@@ -139,7 +141,7 @@ public class OperationsService {
      * Computes a new value using a simple template ({{key}} substitution).
      * Falls back to defaults for source paths not in root.
      * Equivalent to Go's applyTemplate.
-     *
+     * <p>
      * Template syntax: use {{Values.dot.path.key}} to reference values.
      * Example: "{{Values.image.repository}}:{{Values.image.tag}}"
      */
@@ -304,8 +306,14 @@ public class OperationsService {
         if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false")) {
             return Boolean.parseBoolean(value);
         }
-        try { return Long.parseLong(value); } catch (NumberFormatException ignored) {}
-        try { return Double.parseDouble(value); } catch (NumberFormatException ignored) {}
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException ignored) {
+        }
+        try {
+            return Double.parseDouble(value);
+        } catch (NumberFormatException ignored) {
+        }
         return value;
     }
 
@@ -322,6 +330,9 @@ public class OperationsService {
         return value;
     }
 
-    /** Result of a fallback lookup. */
-    private record FallbackResult(Object value, boolean fromDefaults) {}
+    /**
+     * Result of a fallback lookup.
+     */
+    private record FallbackResult(Object value, boolean fromDefaults) {
+    }
 }

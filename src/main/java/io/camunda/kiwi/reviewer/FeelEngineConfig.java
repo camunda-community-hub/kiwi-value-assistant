@@ -9,13 +9,13 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class FeelEngineConfig {
 
-  @Bean
-  public FeelEngineApi feelEngine() {
-    return new FeelEngineApi(
-        new FeelEngine(
-            SpiServiceLoader.loadFunctionProvider(),
-            SpiServiceLoader.loadValueMapper(),
-            FeelEngine.defaultConfiguration(),
-            FeelEngine.defaultClock()));
-  }
+    @Bean
+    public FeelEngineApi feelEngine() {
+        return new FeelEngineApi(
+                new FeelEngine(
+                        SpiServiceLoader.loadFunctionProvider(),
+                        SpiServiceLoader.loadValueMapper(),
+                        FeelEngine.defaultConfiguration(),
+                        FeelEngine.defaultClock()));
+    }
 }

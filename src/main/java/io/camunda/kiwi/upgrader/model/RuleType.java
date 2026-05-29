@@ -22,11 +22,6 @@ public enum RuleType {
         this.value = value;
     }
 
-    @JsonValue
-    public String getValue() {
-        return value;
-    }
-
     public static RuleType fromValue(String value) {
         for (RuleType type : values()) {
             if (type.value.equals(value)) {
@@ -34,6 +29,11 @@ public enum RuleType {
             }
         }
         throw new IllegalArgumentException("Unknown rule type: " + value);
+    }
+
+    @JsonValue
+    public String getValue() {
+        return value;
     }
 
     @Override
